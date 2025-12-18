@@ -1,0 +1,123 @@
+<!-- ===========================
+      FULL BACKGROUND HERO
+=========================== -->
+<section class="fx-hero-full">
+  <div class="fx-bg-scroll">
+    <div class="fx-row">
+      <img src="https://images.pexels.com/photos/12920628/pexels-photo-12920628.jpeg" alt="">
+      <img src="https://images.pexels.com/photos/800629/pexels-photo-800629.jpeg" alt="">
+      <img src="https://images.pexels.com/photos/977003/pexels-photo-977003.jpeg" alt="">
+      <img src="https://images.pexels.com/photos/2365572/pexels-photo-2365572.jpeg" alt="">
+    </div>
+
+    <div class="fx-row">
+      <img src="https://images.pexels.com/photos/12920628/pexels-photo-12920628.jpeg" alt="">
+      <img src="https://images.pexels.com/photos/800629/pexels-photo-800629.jpeg" alt="">
+      <img src="https://images.pexels.com/photos/977003/pexels-photo-977003.jpeg" alt="">
+      <img src="https://images.pexels.com/photos/2365572/pexels-photo-2365572.jpeg" alt="">
+    </div>
+  </div>
+
+  <div class="fx-content">
+    <h1>We make your car <span>race-ready</span> and high-performance</h1>
+    <p>Professional tuning. Race-level performance. Delivered within one week.</p>
+    <a href="#" class="fx-btn">Follow me for more</a>
+  </div>
+</section>
+
+<style>
+/* HERO CONTAINER */
+.fx-hero-full {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* FULL BACKGROUND IMAGE SCROLLER */
+.fx-bg-scroll {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.fx-row {
+  display: flex;
+  gap: 20px;
+  animation: fxScroll 18s linear infinite;
+}
+
+.fx-row img {
+  height: 100vh;          /* FULL HEIGHT BACKGROUND */
+  width: auto;
+  flex-shrink: 0;
+  object-fit: cover;
+  opacity: 0.55;          /* Slight dimming to make text readable */
+}
+
+@keyframes fxScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+/* HERO CONTENT */
+.fx-content {
+  position: relative;
+  z-index: 10;
+  max-width: 800px;
+  padding: 40px 30px;
+  text-align: center;
+
+  /* GLASS EFFECT */
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+}
+
+.fx-content h1 {
+  font-size: 40px;
+  color: #fff;
+  line-height: 1.25;
+  margin: 0 0 20px;
+  font-weight: 700;
+}
+
+.fx-content h1 span {
+  background: linear-gradient(90deg,#7d49f8,#b499ff);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.fx-content p {
+  color: #e5e5e5;
+  font-size: 20px;
+  margin-bottom: 30px;
+}
+
+/* BUTTON */
+.fx-btn {
+  display: inline-block;
+  padding: 16px 40px;
+  background: linear-gradient(90deg,#7d49f8,#482d8a);
+  border-radius: 40px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  transition: 0.3s;
+}
+.fx-btn:hover {
+  transform: scale(0.95);
+}
+
+/* RESPONSIVE */
+@media (min-width: 768px) {
+  .fx-content h1 { font-size: 56px; }
+  .fx-content p { font-size: 22px; }
+}
+</style>

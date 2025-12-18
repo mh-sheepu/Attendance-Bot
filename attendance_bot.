@@ -1,0 +1,118 @@
+import discord
+from discord.ext import commands, tasks
+import aiosqlite
+import os
+from dotenv import load_dotenv
+from datetime import datetime
+
+# Load .env
+load_dotenv()
+TOKEN = os.getenv('BOT_TOKEN')
+GUILD_ID = int(os.getenv('GUILD_ID'))
+
+# Bot setup
+intents = discord.Intents.default()
+intents.members = True
+intents.message_content = True
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+DB_FILE = "attendance.sqlite"
+
+# Ensure DB exists
+async def init_db():
+    async with aiosqlite.connect(DB_FILE) as db:
+        await db.execute("""
+        CREATE TABLE IF NOT EXISTS attendance (
+            user_id TEXT,
+            date TEXT,
+            checkin TEXT,
+            checkout TEXT
+        )
+        """)
+        await db.commit()
+
+@bot.event
+async def on_ready():
+    await init_db()
+    print(f'Bot logged in as {bot.user.name}')
+
+# -------- COMMANDS --------
+
+# Check-in
+@bot.command()
+async def checkin(ctx):
+    user_id = str(ctx.author.id)
+    today = datetime.now().strftime("%Y-%m-%d")
+    now = datetime.now().strftime("%H:%M:%S")
+
+    async with aiosqlite.connect(DB_FILE) as db:
+        async with db.execute("SELECT * FROM attendance WHERE user_id=? AND date=?", (user_id, today)) as cursor:
+            row = await cursor.fetchone()
+            if row and row[2]:
+                await ctx.send("❌ You already checked in today!")
+                return
+        await db.execute("INSERT OR REPLACE INTO attendance (user_id, date, checkin) VALUES (?, ?, ?)", (user_id, today, now))
+        await db.commit()
+        await ctx.send(f"✅ Checked in at {now}")
+
+# Check-out
+@bot.command()
+async def checkout(ctx):
+    user_id = str(ctx.author.id)
+    today = datetime.now().strftime("%Y-%m-%d")
+    now = datetime.now().strftime("%H:%M:%S")
+
+    async with aiosqlite.connect(DB_FILE) as db:
+        async with db.execute("SELECT * FROM attendance WHERE user_id=? AND date=?", (user_id, today)) as cursor:
+            row = await cursor.fetchone()
+            if not row or not row[2]:
+                await ctx.send("❌ You haven't checked in today!")
+                return
+            if row[3]:
+                await ctx.send("❌ You already checked out today!")
+                return
+        await db.execute("UPDATE attendance SET checkout=? WHERE user_id=? AND date=?", (now, user_id, today))
+        await db.commit()
+        await ctx.send(f"🏁 Checked out at {now}")
+
+# Attendance profile
+@bot.command()
+async def attendance(ctx, member: discord.Member = None):
+    target = member or ctx.author
+    user_id = str(target.id)
+
+    async with aiosqlite.connect(DB_FILE) as db:
+        async with db.execute("SELECT * FROM attendance WHERE user_id=?", (user_id,)) as cursor:
+            rows = await cursor.fetchall()
+            if not rows:
+                await ctx.send(f"No attendance records for **{target.name}**")
+                return
+            days_present = sum(1 for r in rows if r[2])
+            days_absent = max(0, 30 - days_present)  # example: 30-day month
+            total_hours = 0
+            for r in rows:
+                if r[3]:
+                    fmt = "%H:%M:%S"
+                    checkin = datetime.strptime(r[2], fmt)
+                    checkout = datetime.strptime(r[3], fmt)
+                    total_hours += (checkout - checkin).seconds / 3600
+            await ctx.send(f"📊 **Attendance Profile — {target.name}**\n**Days Present:** {days_present}\n**Days Absent:** {days_absent}\n**Total Hours Worked:** {total_hours:.2f} hrs")
+
+# Absent list
+@bot.command()
+async def absentlist(ctx):
+    today = datetime.now().strftime("%Y-%m-%d")
+    guild = bot.get_guild(GUILD_ID)
+    async with aiosqlite.connect(DB_FILE) as db:
+        async with db.execute("SELECT user_id FROM attendance WHERE date=?", (today,)) as cursor:
+            rows = await cursor.fetchall()
+            present_ids = [r[0] for r in rows]
+            absent = [m for m in guild.members if not m.bot and str(m.id) not in present_ids]
+            if not absent:
+                await ctx.send("Everyone is present today!")
+            else:
+                msg = "\n".join(f"• {m.name}" for m in absent)
+                await ctx.send(f"🚫 **Absent Users Today:**\n{msg}")
+
+# Run bot
+bot.run(TOKEN)
