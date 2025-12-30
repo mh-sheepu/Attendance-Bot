@@ -57,11 +57,8 @@ async def init_db():
 @bot.event
 async def on_ready():
     await init_db()
-    if GUILD_ID:
-        guild = discord.Object(id=GUILD_ID)
-        await tree.sync(guild=guild)
-    else:
-        await tree.sync()
+    # Register slash commands globally for all servers
+    await tree.sync()
     daily_report_loop.start()
     print(f"Bot ready as {bot.user} (id: {bot.user.id})")
 
